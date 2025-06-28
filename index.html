@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kuis Reflektif 3D</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #0f172a;
+      color: #f8fafc;
+      overflow: hidden;
+    }
+    .container {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(15, 23, 42, 0.85);
+      padding: 30px;
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+      max-width: 600px;
+      width: 90%;
+      z-index: 2;
+    }
+    h1, h2 {
+      text-align: center;
+    }
+    .question {
+      margin: 20px 0;
+    }
+    .options button {
+      display: block;
+      width: 100%;
+      margin-top: 10px;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      background-color: #3b82f6;
+      color: white;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    .options button:hover {
+      background-color: #1e40af;
+    }
+    .result {
+      text-align: center;
+      margin-top: 20px;
+      background: rgba(96, 165, 250, 0.2);
+      padding: 20px;
+      border-radius: 12px;
+    }
+    .character-img {
+      width: 150px;
+      margin: 10px auto;
+      display: block;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    }
+    canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 0;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="bg"></canvas>
+  <div class="container">
+    <h1>Kuis Reflektif</h1>
+    <div id="quiz">
+      <div class="question" id="questionText"></div>
+      <div class="options" id="options"></div>
+    </div>
+    <div id="result" class="result" style="display: none;"></div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js"></script>
+  <script>
+    // Three.js Scene Setup
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById("bg"), alpha: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+
+    const light = new THREE.PointLight(0xffffff, 1, 100);
+    light.position.set(10, 20, 25);
+    scene.add(light);
+    camera.position.z = 20;
+
+    let shape;
+
+    function setScene(type) {
+      if (shape) scene.remove(shape);
+      let geometry, material;
+      if (type === "lelah") {
+        geometry = new THREE.SphereGeometry(8, 32, 32);
+        material = new THREE.MeshStandardMaterial({ color: 0x64748b });
+      } else if (type === "gagal") {
+        geometry = new THREE.BoxGeometry(10, 10, 10);
+        material = new THREE.MeshStandardMaterial({ color: 0x991b1b });
+      } else if (type === "bingung") {
+        geometry = new THREE.TorusGeometry(6, 2, 16, 100);
+        material = new THREE.MeshStandardMaterial({ color: 0x92400e });
+      } else {
+        geometry = new THREE.ConeGeometry(7, 14, 32);
+        material = new THREE.MeshStandardMaterial({ color: 0x22c55e });
+      }
+      shape = new THREE.Mesh(geometry, material);
+      scene.add(shape);
+    }
+
+    function animate() {
+      requestAnimationFrame(animate);
+      if (shape) {
+        shape.rotation.x += 0.0025;
+        shape.rotation.y += 0.005;
+      }
+      renderer.render(scene, camera);
+    }
+    animate();
+
+    const images = {
+  lelah: "images/aira.jpeg",     // Aira si Pejuang Lelah
+  gagal: "images/raka.jpeg",     // Raka si Pemimpi Terluka
+  bingung: "images/nara.jpeg",   // Nara si Pencari Arah
+  semangat: "images/zian.jpeg"   // Zian si Penerobos Batas
+};
+
+
+
+    // Quiz Logic
+    const questions = [
+      {
+        text: "Apa yang paling kamu rasakan belakangan ini?",
+        options: [
+          { text: "Lelah", type: "lelah" },
+          { text: "Gagal", type: "gagal" },
+          { text: "Bingung", type: "bingung" },
+          { text: "Termotivasi", type: "semangat" },
+        ]
+      },
+      {
+        text: "Bagaimana kamu menanggapi masalah?",
+        options: [
+          { text: "Menyendiri", type: "lelah" },
+          { text: "Berpikir keras", type: "bingung" },
+          { text: "Menghindar", type: "gagal" },
+          { text: "Melawan", type: "semangat" },
+        ]
+      },
+      {
+        text: "Saat memikirkan masa depanmu, kamu merasa…",
+        options: [
+          { text: "Takut", type: "gagal" },
+          { text: "Kosong", type: "lelah" },
+          { text: "Berharap", type: "bingung" },
+          { text: "Semangat", type: "semangat" },
+        ]
+      }
+    ];
+
+    const results = {
+      lelah: {
+        character: "🧗‍♀️ Aira si Pejuang Lelah",
+        title: "Pejuang Lelah",
+        quote: "\"Ujian terberat justru adalah pintu menuju keberkahan.\" - Imam Al-Ghazali",
+        message: "Kamu sedang lelah, dan itu wajar. Jangan lupa istirahat bukan berarti menyerah. Saat kamu kembali, dunia akan tetap menantimu.",
+        story: "Bayangkan kamu mendaki gunung dalam kabut. Langkahmu berat, pandangan terbatas. Tapi kamu terus naik. Dan saat kabut hilang, pemandangan luar biasa menantimu. Itulah kamu.",
+        desc: "Aira adalah sosok pendaki sunyi. Ia terlihat tenang, tapi dalam hatinya penuh badai perjuangan. Ia butuh cahaya kecil untuk menyalakan kembali bara semangat."
+      },
+      gagal: {
+        character: "🎨 Raka si Pemimpi Terluka",
+        title: "Pemimpi Terluka",
+        quote: "\"Saya tidak pernah kalah. Saya menang atau saya belajar.\" - Nelson Mandela",
+        message: "Kegagalan yang kamu rasakan hari ini adalah langkah kecil menuju kemenangan besar. Jangan biarkan luka menghalangi mimpimu.",
+        story: "Seorang pelukis pernah menyobek kanvasnya karena kecewa. Tapi bekas sobekan itu justru jadi bagian paling unik di lukisannya. Gagal itu bukan akhir. Itu bagian dari maha karya hidupmu.",
+        desc: "Raka adalah pemimpi besar. Luka dan kecewa membuatnya tumbuh — meski seringkali ia lupa bahwa impiannya masih layak diperjuangkan."
+      },
+      bingung: {
+        character: "🧭 Nara si Pencari Arah",
+        title: "Pencari Arah",
+        quote: "\"Kadang kita tidak tahu apa maknanya sekarang, tapi semuanya akan tersambung nanti.\" - Steve Jobs",
+        message: "Kebingunganmu adalah fase penting dari pertumbuhan. Teruslah melangkah meski belum tahu arahnya.",
+        story: "Kamu sedang berjalan di labirin. Di balik rasa tersesat itu, sebenarnya kamu sedang membangun peta. Saat jalan keluar ditemukan, kamu jadi tahu arahmu — lebih jelas dari siapa pun.",
+        desc: "Nara adalah penjelajah pikiran. Ia haus akan makna dan maklum akan bingung. Ia butuh ketenangan untuk menyusun arah dan keberanian untuk bertanya."
+      },
+      semangat: {
+        character: "🚀 Zian si Penerobos Batas",
+        title: "Penerobos Batas",
+        quote: "\"Gantungkan cita-citamu setinggi langit!\" - Soekarno",
+        message: "Kamu sedang terbakar semangat. Gunakan energi ini untuk mewujudkan impianmu dan menularkan semangat ke sekitarmu.",
+        story: "Seperti roket yang siap diluncurkan, kamu sedang di fase awal yang menentukan. Terus isi bahan bakar dengan keyakinan, dan biarkan kamu melesat hingga ke bintang.",
+        desc: "Zian adalah pembakar batas. Ia menyala ketika tantangan muncul dan tak takut menyongsong langit tinggi. Ia lahir untuk menyalakan harapan."
+      }
+    };
+
+    let currentQuestion = 0;
+    let scores = { lelah: 0, gagal: 0, bingung: 0, semangat: 0 };
+
+    function showQuestion() {
+      const q = questions[currentQuestion];
+      document.getElementById("questionText").textContent = q.text;
+      const optionsDiv = document.getElementById("options");
+      optionsDiv.innerHTML = "";
+      q.options.forEach(opt => {
+        const btn = document.createElement("button");
+        btn.textContent = opt.text;
+        btn.onclick = () => {
+          scores[opt.type]++;
+          currentQuestion++;
+          if (currentQuestion < questions.length) {
+            showQuestion();
+          } else {
+            showResult();
+          }
+        };
+        optionsDiv.appendChild(btn);
+      });
+    }
+
+    function showResult() {
+      const topType = Object.entries(scores).sort((a,b) => b[1]-a[1])[0][0];
+      const res = results[topType];
+      setScene(topType);
+      document.getElementById("quiz").style.display = "none";
+      const resultDiv = document.getElementById("result");
+      resultDiv.style.display = "block";
+      resultDiv.innerHTML = `
+        <img src="${images[topType]}" class="character-img" alt="Karakter ${res.character}" />
+        <h2>${res.character}</h2>
+        <p><strong>${res.title}</strong></p>
+        <p><em>${res.quote}</em></p>
+        <p>${res.message}</p>
+        <p style="margin-top: 10px; font-style: italic;">${res.story}</p>
+        <p style="margin-top: 20px;">${res.desc}</p>
+      `;
+    }
+
+    showQuestion();
+  </script>
+</body>
+</html>
